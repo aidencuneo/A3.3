@@ -11,15 +11,15 @@ function timeElapsed() {
 
 export function getPerlin2D(vec) {
     return opts.noiseScale * (opts.perlin.get2(new Vector2(
-        vec.x / opts.noiseSize + opts.speed * timeElapsed(),
-        vec.y / opts.noiseSize + opts.speed * timeElapsed(),
+        vec.x / opts.noiseSize + 1000 * opts.seed,
+        vec.y / opts.noiseSize + 1000 * opts.seed,
     )) + 1);
 }
 
 export function getPerlin3D(vec) {
     return opts.noiseScale * (opts.perlin.get3(new Vector3(
-        vec.x / opts.noiseSize + opts.speed * timeElapsed(),
-        vec.y / opts.noiseSize + opts.speed * timeElapsed(),
-        vec.z / opts.noiseSize + opts.speed * timeElapsed(),
+        vec.x / opts.noiseSize + 1000 * opts.seed,
+        vec.y / opts.noiseSize + 1000 * opts.seed,
+        vec.z / opts.noiseSize + 1000 * opts.seed,
     )) + 1);
 }

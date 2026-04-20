@@ -6,6 +6,7 @@ export default class World {
     constructor() {
         this.cubes = {};
         this.heights = {};
+        this.hoverHeights = {};
         this.size = 24;
         this.radius = this.size / 2;
     }
@@ -22,7 +23,7 @@ export default class World {
                 let cube = this.spawnCube(x, y);
                 scene.add(cube);
                 this.cubes[[x, y]] = cube;
-                // this.heights[[x, y]] = Math.random() * 2;
+                // this.heights[[x, y]];
             }
         }
     }
@@ -48,10 +49,17 @@ export default class World {
         Object.values(this.cubes).forEach(cube => {
             let pos = cube.position;
             let [x, y] = [pos.x, pos.z];
-            let desiredHeight = this.heights[[x, y]] ? this.heights[[x, y]] : 1;
+            let height = 1;
+
+            if (this.heights[[x, y]])
+                height = this.heights[[x, y]];
+            else if (this.hoverHeights[[x, y]])
+                height = this.hoverHeights[[x, y]];
+
+            let noiseHeight = getPerlin2D(new THREE.Vector2(x / 10, y / 10));
             // console.log(this.heights);
 
-            let desiredScale = 0.95 * cube.scale.y + 0.05 * desiredHeight;
+            let desiredScale = 0.95 * cube.scale.y + 0.05 * height * noiseHeight;
             cube.scale.y = desiredScale;
             cube.position.y = desiredScale / 2;
 

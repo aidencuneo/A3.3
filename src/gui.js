@@ -12,13 +12,6 @@ export const opts = {
     noiseSize: 1, // 1
     noiseScale: 1, // 1
 
-    cellsFaceCentre: true,
-    cellSize: 2, // 0.3
-    cellNoiseSize: 0.5,
-    cellNoiseScale: 5,
-    xSegments: 100,
-    ySegments: 100,
-
     greyscale: false,
     colourNoiseScale: 1,
 

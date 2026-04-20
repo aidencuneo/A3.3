@@ -17,12 +17,12 @@ scene.background = new THREE.Color(0, 0, 0);
 
 // Add objects to scene
 const pointLight1 = new THREE.PointLight(0xffffff, 3, 0, 0);
-pointLight1.position.set(500, 500, 500);
+pointLight1.position.set(100, 100, 100);
 scene.add(pointLight1);
 
-const pointLight2 = new THREE.PointLight(0xffffff, 1, 0, 0);
-pointLight2.position.set(-500, -500, -500);
-scene.add(pointLight2);
+// const pointLight2 = new THREE.PointLight(0xffffff, 1, 0, 0);
+// pointLight2.position.set(-500, -500, -500);
+// scene.add(pointLight2);
 
 opts.scene = scene;
 resetWorld();
@@ -51,7 +51,7 @@ window.addEventListener('mousemove', e => {
     raycaster.setFromCamera(mouse, camera);
     let objs = raycaster.intersectObjects(scene.children, false);
 
-    opts.world.heights = {};
+    opts.world.hoverHeights = {};
 
     if (objs.length == 0)
         return;
@@ -59,14 +59,12 @@ window.addEventListener('mousemove', e => {
     let obj = objs[0].object;
     let pos = obj.position;
 
-    opts.world.heights[[pos.x, pos.z]] = 10;
-
-    for (let y = -5; y <= 5; ++y) {
-        for (let x = -5; x <= 5; ++x) {
-            if (x * x + y * y < 5 * 5)
-            opts.world.heights[[pos.x + x, pos.z + y]] = 2 * (5 - Math.sqrt(x * x + y * y));
-        }
-    }
+    for (let y = -5; y <= 5; ++y)
+        for (let x = -5; x <= 5; ++x)
+            if (x * x + y * y < 5 * 5) {
+                let h = Math.cos(x / 2.5) * Math.cos(y / 2.5) + 1;
+                opts.world.hoverHeights[[pos.x + x, pos.z + y]] = 2 * h;
+            }
 });
 
 window.addEventListener('click', () => {
@@ -83,6 +81,13 @@ window.addEventListener('click', () => {
     console.log(obj.material);
     opts.world.heights[[pos.x, pos.z]] = 10;
     // obj.position.x = 1;
+
+    for (let y = -5; y <= 5; ++y)
+        for (let x = -5; x <= 5; ++x)
+            if (x * x + y * y < 5 * 5) {
+                let h = Math.cos(x / 2.5) * Math.cos(y / 2.5) + 1;
+                opts.world.heights[[pos.x + x, pos.z + y]] = 2 * h;
+            }
 });
 
 function animate() {
