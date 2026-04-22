@@ -3,30 +3,39 @@ import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
 import { opts } from './gui';
 import { getPerlin2D, getPerlin3D } from './noise';
 
+const loader = new FBXLoader();
+
 async function spawnObject(path, x, y, z, size, colour, noisySize, noisyPos) {
-    let loader = new FBXLoader();
+    size ??= 1;
+    colour ??= new THREE.Color(1, 1, 1);
+    noisySize ??= true;
+    noisyPos ??= true;
+
     let obj = await loader.loadAsync(path);
-    let child = obj.children[0];
+    let child = null;
+    for (child of obj.children)
+        if (child instanceof THREE.Mesh)
+            break;
 
     child.castShadow = true;
     child.receiveShadow = true;
-    child.material.color = colour ?? new THREE.Color(1, 1, 1);
+    child.material.color = colour;
 
     child.position.x = x;
     child.position.y = y;
     child.position.z = z;
 
-    if (noisyPos ?? true) {
-        child.position.x += getPerlin3D(new THREE.Vector3(x, 0, z)) * 0.5 - 0.25;
-        child.position.z += getPerlin3D(new THREE.Vector3(x, 100, z)) * 0.5 - 0.25;
+    if (noisyPos) {
+        child.position.x += Math.random() * 0.5 - 0.25;
+        child.position.z += Math.random() * 0.5 - 0.25;
     }
 
-    if (noisySize ?? true)
+    if (noisySize)
         size *= 0.75 + Math.random() * 0.5;
 
-    child.scale.x = (size ?? 1) * 0.001;
-    child.scale.y = (size ?? 1) * 0.001;
-    child.scale.z = (size ?? 1) * 0.001;
+    child.scale.x = size * 0.002;
+    child.scale.y = size * 0.002;
+    child.scale.z = size * 0.002;
 
     opts.scene.add(child);
     opts.world.objects[[x, z]] = child;
@@ -34,33 +43,60 @@ async function spawnObject(path, x, y, z, size, colour, noisySize, noisyPos) {
 }
 
 export async function spawnTree(x, y, z, size) {
+    size ??= 1;
+
     return await spawnObject(
-        'models/PineTree.fbx',
-        x, y, z, size,
-        new THREE.Color(0, 1, 1),
+        'models/Tree.fbx',
+        x, y, z, 1.5 * size,
+        new THREE.Color(0, 0, 1),
     );
 }
 
 export async function spawnTent1(x, y, z, size) {
-    return await spawnObject(
+    size ??= 1;
+
+    let obj = await spawnObject(
         'models/Tent1.fbx',
-        x, y, z, size,
+        x, y, z, 3 * size,
         new THREE.Color(1, 0, 0),
     );
+
+    obj.position.z -= 0.25;
+    return obj;
 }
 
 export async function spawnTent2(x, y, z, size) {
-    return await spawnObject(
+    size ??= 1;
+
+    let obj = await spawnObject(
         'models/Tent2.fbx',
+        x, y, z, 3 * size,
+        new THREE.Color(1, 0, 0),
+    );
+
+    obj.position.z -= 0.25;
+    return obj;
+}
+
+export async function spawnFence(x, y, z, size) {
+    size ??= 1;
+
+    return await spawnObject(
+        'models/Fence.fbx',
         x, y, z, size,
         new THREE.Color(1, 0, 0),
     );
 }
 
 export async function spawnSheep(x, y, z, size) {
-    return await spawnObject(
+    size ??= 1;
+
+    let obj = await spawnObject(
         'models/Sheep.fbx',
-        x, y, z, size,
+        x, y, z, 50 * size,
         new THREE.Color(1, 0, 0),
     );
+
+    obj.position.y += 0.5;
+    return obj;
 }

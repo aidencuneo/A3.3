@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { getPerlin2D, getPerlin3D } from './noise';
 import { opts } from './gui';
-import { spawnTree } from './objects';
+import { spawnFence, spawnSheep, spawnTent1, spawnTent2, spawnTree } from './objects';
+import { weightedRand } from './util';
 
 export default class World {
     constructor() {
@@ -25,7 +26,7 @@ export default class World {
                 let cube = this.spawnCube(x, y);
                 scene.add(cube);
                 this.cubes[[x, y]] = cube;
-                this.refreshObject(x, y);
+                await this.refreshObject(x, y);
             }
         }
     }
@@ -49,11 +50,11 @@ export default class World {
         return mesh;
     }
 
-    refreshObject(x, y) {
+    async refreshObject(x, y) {
         // height < 2:
         //  10% tent (1 and 2)
         //  70% tree
-        //  30% air
+        //  20% air
         // height < 4:
         //  5% tent
         //  10% fence
@@ -78,9 +79,92 @@ export default class World {
         //  0.5% tent
         //  1.5% tree
         //  83% air
+        // height < 16:
+        //  5% sheep
+        //  0.5% tree
+        //  94.5% air
+        // height >= 16:
+        //  1% sheep
+        //  99% air
+
+        if (!this.cubes[[x, y]])
+            return;
 
         let h = this.heights[[x, y]] ? this.heights[[x, y]] : 1;
-        let tree = await spawnTree(x, 2, y, 1);
+        let chance = {};
+
+        if (h < 2)
+            chance = {
+                tent1: 0.05,
+                tent2: 0.05,
+                tree: 0.7,
+            };
+
+        else if (h < 4)
+            chance = {
+                tent1: 0.025,
+                tent2: 0.025,
+                fence: 0.1,
+                tree: 0.5,
+            };
+
+        else if (h < 6)
+            chance = {
+                sheep: 0.05,
+                fence: 0.2,
+                tree: 0.3,
+            };
+
+        else if (h < 8)
+            chance = {
+                sheep: 0.1,
+                fence: 0.05,
+                tree: 0.15,
+            };
+
+        else if (h < 10)
+            chance = {
+                sheep: 0.15,
+                tree: 0.05,
+            };
+
+        else if (h < 12)
+            chance = {
+                sheep: 0.15,
+                tent2: 0.005,
+                tree: 0.015,
+            };
+
+        else if (h < 16)
+            chance = {
+                sheep: 0.05,
+                tree: 0.005,
+            };
+
+        else
+            chance = {
+                sheep: 0.01,
+            };
+
+        // Clear previous object
+        if (this.objects[[x, y]])
+            opts.scene.remove(this.objects[[x, y]]);
+
+        let choice = weightedRand(chance);
+        let obj = null;
+
+        if (choice == 'tent1')
+            obj = await spawnTent1(x, 1, y);
+        else if (choice == 'tent2')
+            obj = await spawnTent2(x, 1, y);
+        else if (choice == 'fence')
+            obj = await spawnFence(x, 1, y);
+        else if (choice == 'tree')
+            obj = await spawnTree(x, 1, y);
+        else if (choice == 'sheep')
+            obj = await spawnSheep(x, 1, y);
+
+        return obj;
     }
 
     animate() {

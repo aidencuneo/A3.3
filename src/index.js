@@ -68,17 +68,20 @@ window.addEventListener('mousemove', e => {
 window.addEventListener('click', () => {
     raycaster.setFromCamera(mouse, camera);
     let objs = raycaster.intersectObjects(scene.children, false);
+    let obj = null;
 
-    if (objs.length == 0)
+    // Get first box
+    for (let hit of objs) {
+        if (hit.object.geometry instanceof THREE.BoxGeometry) {
+            obj = hit.object;
+            break;
+        }
+    }
+
+    if (!obj)
         return;
 
-    let obj = objs[0].object;
     let pos = obj.position;
-
-    console.log(obj);
-    console.log(obj.material);
-    // opts.world.heights[[pos.x, pos.z]] = 10;
-    // obj.position.x = 1;
 
     for (let y = -5; y <= 5; ++y)
         for (let x = -5; x <= 5; ++x)
@@ -95,6 +98,8 @@ window.addEventListener('click', () => {
 
                 if (opts.world.heights[[pos.x + x, pos.z + y]] < 0)
                     opts.world.heights[[pos.x + x, pos.z + y]] = 0;
+
+                opts.world.refreshObject(pos.x + x, pos.z + y);
             }
 });
 
@@ -110,14 +115,22 @@ window.addEventListener('keyup', e => {
 
 setInterval(() => {
     raycaster.setFromCamera(mouse, camera);
-    let objs = raycaster.intersectObjects(scene.children, false);
+    let objs = raycaster.intersectObjects(scene.children, true);
 
     opts.world.hoverHeights = {};
+    let obj = null;
 
-    if (objs.length == 0)
+    // Get first box
+    for (let hit of objs) {
+        if (hit.object.geometry instanceof THREE.BoxGeometry) {
+            obj = hit.object;
+            break;
+        }
+    }
+
+    if (!obj)
         return;
 
-    let obj = objs[0].object;
     let pos = obj.position;
 
     for (let y = -5; y <= 5; ++y)
