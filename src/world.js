@@ -1,17 +1,19 @@
 import * as THREE from 'three';
 import { getPerlin2D, getPerlin3D } from './noise';
 import { opts } from './gui';
+import { spawnTree } from './objects';
 
 export default class World {
     constructor() {
         this.cubes = {};
+        this.objects = {};
         this.heights = {};
         this.hoverHeights = {};
         this.size = 24;
         this.radius = this.size / 2;
     }
 
-    create(scene) {
+    async create(scene) {
         this.cubes = {};
         let r = this.radius;
 
@@ -23,7 +25,7 @@ export default class World {
                 let cube = this.spawnCube(x, y);
                 scene.add(cube);
                 this.cubes[[x, y]] = cube;
-                // this.heights[[x, y]];
+                this.refreshObject(x, y);
             }
         }
     }
@@ -37,12 +39,48 @@ export default class World {
             // color: Math.random() * 0xffffff,
         });
         const mesh = new THREE.Mesh(geometry, material);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
 
         mesh.position.x = x;
         mesh.position.y = 0;
         mesh.position.z = y;
 
         return mesh;
+    }
+
+    refreshObject(x, y) {
+        // height < 2:
+        //  10% tent (1 and 2)
+        //  70% tree
+        //  30% air
+        // height < 4:
+        //  5% tent
+        //  10% fence
+        //  50% tree
+        //  35% air
+        // height < 6:
+        //  5% sheep
+        //  20% fence
+        //  30% tree
+        //  50% air
+        // height < 8:
+        //  10% sheep
+        //  5% fence
+        //  15% tree
+        //  70% air
+        // height < 10:
+        //  15% sheep
+        //  5% tree
+        //  80% air
+        // height < 12:
+        //  15% sheep
+        //  0.5% tent
+        //  1.5% tree
+        //  83% air
+
+        let h = this.heights[[x, y]] ? this.heights[[x, y]] : 1;
+        let tree = await spawnTree(x, 2, y, 1);
     }
 
     animate() {
@@ -53,8 +91,11 @@ export default class World {
 
             if (this.heights[[x, y]])
                 height = this.heights[[x, y]];
-            else if (this.hoverHeights[[x, y]])
-                height = this.hoverHeights[[x, y]];
+            if (this.hoverHeights[[x, y]])
+                height += this.hoverHeights[[x, y]];
+
+            if (height < 1)
+                height = 1;
 
             let noiseHeight = getPerlin2D(new THREE.Vector2(x / 10, y / 10));
             // console.log(this.heights);
@@ -62,6 +103,22 @@ export default class World {
             let desiredScale = 0.95 * cube.scale.y + 0.05 * height * noiseHeight;
             cube.scale.y = desiredScale;
             cube.position.y = desiredScale / 2;
+
+            let n = cube.scale.y / 20;
+            let r = 0.1 + 0.9 * n;
+            let g = 0.5 + 0.5 * n;
+            let b = 0.1 + 0.9 * n;
+            cube.material.color.r = r > 1 ? 1 : r;
+            cube.material.color.g = g > 1 ? 1 : g;
+            cube.material.color.b = b > 1 ? 1 : b;
+
+            // Objects
+            let obj = this.objects[[x, y]];
+
+            if (!obj)
+                return;
+
+            obj.position.y = desiredScale;
 
             // let heightNoise = getPerlin2D(new THREE.Vector2(pos.x / 10, pos.z / 10));
             // cube.scale.y = heightNoise * 4;
